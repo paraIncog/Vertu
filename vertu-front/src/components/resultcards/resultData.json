@@ -1,0 +1,11 @@
+{
+  "General": {
+    "Domain Name": "example.com",
+    "Top-Level Domain": "com"
+  },
+  "Details": {
+    "Protocol": "https",
+    "Port": "443",
+    "Path": "/"
+  }
+}
