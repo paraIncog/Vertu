@@ -9,6 +9,13 @@
       />
 
       <DetailCard
+        v-if="resultData.Web"
+        :data="resultData.Web"
+        subtitle="Web domain details"
+        title="Web Domain"
+      />
+
+      <DetailCard
         :data="resultData.Details"
         subtitle="Additional details"
         title="Details"
@@ -27,6 +34,7 @@
     if (!result.value) return null
 
     try {
+      const hasExplicitProtocol = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(result.value)
       let url: URL
       try {
         url = new URL(result.value)
@@ -62,12 +70,25 @@
         details[fragmentParts.length > 1 ? 'Fragments' : 'Fragment'] = fragmentParts.join(', ')
       }
 
+      const general = {
+        'Domain Name': parts.slice(0, -1).join('.') || hostname,
+        'Top-Level Domain': parts.slice(-1).join('.') || '',
+      }
+
+      const isWebProtocol = hasExplicitProtocol && ['http:', 'https:'].includes(url.protocol)
+      const web = isWebProtocol
+        ? {
+            Encrypted: url.protocol === 'https:' ? 'Yes' : 'No',
+            Subdomain: parts.length > 2 ? parts.slice(0, -2).join('.') : '',
+            Host: parts.length > 1 ? parts[parts.length - 2] : hostname,
+            'Top-Level Domain': parts.slice(-1).join('.') || '',
+          }
+        : undefined
+
       return {
-        General: {
-          'Domain Name': parts.slice(0, -1).join('.') || hostname,
-          'Top-Level Domain': parts.slice(-1).join('.') || '',
-        },
+        General: general,
         Details: details,
+        Web: web,
       }
     } catch {
       // Fallback: Show the raw input
