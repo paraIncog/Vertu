@@ -1,11 +1,10 @@
 {
   "General": {
-    "Domain Name": "example.com",
-    "Top-Level Domain": "com"
+    "Authority": "example.com",
+    "Schema Used": "https",
+    "Path": "/"
   },
   "Details": {
-    "Protocol": "https",
-    "Port": "443",
-    "Path": "/"
+    "Port": "443"
   }
 }

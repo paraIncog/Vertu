@@ -57,32 +57,31 @@
         : []
 
       const details: Record<string, string> = {
-        Protocol: url.protocol.replace(':', ''),
         Port: url.port || 'default',
+      }
+
+      const general: Record<string, string> = {
+        Schema: url.protocol.replace(':', ''),
+        Authority: hostname,
         Path: url.pathname || '/',
       }
 
       if (queryParts.length > 0) {
-        details[queryParts.length > 1 ? 'Queries' : 'Query'] = queryParts.join(', ')
+        general[queryParts.length > 1 ? 'Queries' : 'Query'] = queryParts.join(', ')
       }
 
       if (fragmentParts.length > 0) {
-        details[fragmentParts.length > 1 ? 'Fragments' : 'Fragment'] = fragmentParts.join(', ')
-      }
-
-      const general = {
-        'Domain Name': parts.slice(0, -1).join('.') || hostname,
-        'Top-Level Domain': parts.slice(-1).join('.') || '',
+        general[fragmentParts.length > 1 ? 'Fragments' : 'Fragment'] = fragmentParts.join(', ')
       }
 
       const isWebProtocol = hasExplicitProtocol && ['http:', 'https:'].includes(url.protocol)
       const web = isWebProtocol
         ? {
-            Encrypted: url.protocol === 'https:' ? 'Yes' : 'No',
-            Subdomain: parts.length > 2 ? parts.slice(0, -2).join('.') : '',
-            Host: parts.length > 1 ? parts[parts.length - 2] : hostname,
-            'Top-Level Domain': parts.slice(-1).join('.') || '',
-          }
+          'Encrypted': url.protocol === 'https:' ? 'Yes' : 'No',
+          'Subdomain': parts.length > 2 ? parts.slice(0, -2).join('.') : '',
+          'Host': parts.length > 1 ? parts.at(-2) : hostname,
+          'Top-Level Domain': parts.slice(-1).join('.') || '',
+        }
         : undefined
 
       return {
