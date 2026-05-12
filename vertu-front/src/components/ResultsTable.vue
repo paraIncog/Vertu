@@ -11,14 +11,14 @@
       <DetailCard
         v-if="resultData.Web"
         :data="resultData.Web"
-        subtitle="Web domain details"
+        subtitle="Schema identified as http/https, analyzing domain parts"
         title="Web Domain"
       />
 
       <DetailCard
         v-if="resultData.DomainChecks"
         :data="resultData.DomainChecks"
-        subtitle="Overall letter-only check for domain parts"
+        subtitle="Checks on domain composition"
         title="Looking out for"
       />
     </div>
