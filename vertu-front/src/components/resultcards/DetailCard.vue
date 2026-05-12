@@ -9,18 +9,34 @@
     <v-card-text>
       <div v-for="(value, label) in data" :key="label" class="result-row" :label="label">
         <span class="result-label">{{ label }}:</span>
-        <span class="result-value">{{ value }}</span>
+        <span class="result-value">
+          <template v-if="isValueObject(value)">
+            <span>{{ value.text || '—' }}</span>
+            <span v-if="value.warning" class="warning-icon">!</span>
+            <span v-else-if="value.status === 'yes'" class="status-icon status-yes">✓</span>
+            <span v-else-if="value.status === 'no'" class="status-icon status-no">✕</span>
+          </template>
+          <template v-else>
+            {{ value || '—' }}
+          </template>
+        </span>
       </div>
     </v-card-text>
   </v-card>
 </template>
 
 <script lang="ts" setup>
+  type DetailValue = string | undefined | { text: string; warning?: boolean; status?: 'yes' | 'no' }
+
   defineProps<{
     title: string
     subtitle?: string
-    data: Record<string, string | undefined>
+    data: Record<string, DetailValue>
   }>()
+
+  function isValueObject(value: DetailValue): value is { text: string; warning?: boolean; status?: 'yes' | 'no' } {
+    return typeof value === 'object' && value !== null && 'text' in value
+  }
 </script>
 
 <style scoped>
@@ -42,5 +58,46 @@
 
 .result-value {
   text-align: right;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.warning-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  border-radius: 999px;
+  background-color: #fdd835;
+  color: #000;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.status-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.status-yes {
+  background-color: #43a047;
+}
+
+.status-no {
+  background-color: #e53935;
 }
 </style>

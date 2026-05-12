@@ -16,9 +16,10 @@
       />
 
       <DetailCard
-        :data="resultData.Details"
-        subtitle="Additional details"
-        title="Details"
+        v-if="resultData.DomainChecks"
+        :data="resultData.DomainChecks"
+        subtitle="Overall letter-only check for domain parts"
+        title="Looking out for"
       />
     </div>
   </v-card>
@@ -34,7 +35,6 @@
     if (!result.value) return null
 
     try {
-      const hasExplicitProtocol = /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(result.value)
       let url: URL
       try {
         url = new URL(result.value)
@@ -56,7 +56,7 @@
         ? rawHash.split('#').filter(Boolean)
         : []
 
-      const details: Record<string, string> = {
+      const details: Record<string, string | { text: string; status?: 'yes' | 'no' }> = {
         Port: url.port || 'default',
       }
 
@@ -64,6 +64,7 @@
         Schema: url.protocol.replace(':', ''),
         Authority: hostname,
         Path: url.pathname || '/',
+        Port: url.port || 'default',
       }
 
       if (queryParts.length > 0) {
@@ -74,20 +75,44 @@
         general[fragmentParts.length > 1 ? 'Fragments' : 'Fragment'] = fragmentParts.join(', ')
       }
 
-      const isWebProtocol = hasExplicitProtocol && ['http:', 'https:'].includes(url.protocol)
+      const isWebProtocol = ['http:', 'https:'].includes(url.protocol)
+      const subdomain = parts.length > 2 ? parts.slice(0, -2).join('.') : ''
+      const host = parts.length > 1 ? parts.at(-2)! : hostname
+      const topLevelDomain = parts.slice(-1).join('.') || ''
+      const hasNonLetter = (value: string) => /[^A-Za-z]/.test(value)
+      const subdomainWarning = subdomain !== '' && hasNonLetter(subdomain)
+      const hostWarning = hasNonLetter(host)
+      const topLevelDomainWarning = topLevelDomain !== '' && hasNonLetter(topLevelDomain)
+      const hasAnyNonLetter = subdomainWarning || hostWarning || topLevelDomainWarning
+
       const web = isWebProtocol
         ? {
           'Encrypted': url.protocol === 'https:' ? 'Yes' : 'No',
-          'Subdomain': parts.length > 2 ? parts.slice(0, -2).join('.') : '',
-          'Host': parts.length > 1 ? parts.at(-2) : hostname,
-          'Top-Level Domain': parts.slice(-1).join('.') || '',
+          'Subdomain': {
+            text: subdomain,
+            warning: subdomainWarning,
+          },
+          'Hostname': {
+            text: host,
+            warning: hostWarning,
+          },
+          'Top-Level Domain': {
+            text: topLevelDomain,
+            warning: topLevelDomainWarning,
+          },
+        }
+        : undefined
+
+      const domainChecks: Record<string, string | { text: string; status?: 'yes' | 'no' }> | undefined = isWebProtocol
+        ? {
+          'Contains only letters': !hasAnyNonLetter ? { text: 'Yes', status: 'yes' } : { text: 'No', status: 'no' },
         }
         : undefined
 
       return {
         General: general,
-        Details: details,
         Web: web,
+        DomainChecks: domainChecks,
       }
     } catch {
       // Fallback: Show the raw input
@@ -95,7 +120,6 @@
         General: {
           Input: result.value,
         },
-        Details: {},
       }
     }
   })
