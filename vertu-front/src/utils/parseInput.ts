@@ -1,4 +1,4 @@
-export type DetailValue = string | undefined | { text: string; warning?: boolean; redWarning?: boolean; status?: 'yes' | 'no' }
+export type DetailValue = string | undefined | { text: string, warning?: boolean, redWarning?: boolean, status?: 'yes' | 'no' }
 
 export type ParsedResult = {
   General: Record<string, string>
@@ -6,22 +6,22 @@ export type ParsedResult = {
   DomainChecks?: Record<string, DetailValue>
 }
 
-function extractQueryParts(searchParams: URLSearchParams): string[] {
+function extractQueryParts (searchParams: URLSearchParams): string[] {
   return Array.from(searchParams.entries()).map(([key, value]) => {
     return value ? `${key}=${value}` : key
   })
 }
 
-function extractFragmentParts(rawHash: string): string[] {
+function extractFragmentParts (rawHash: string): string[] {
   const trimmed = rawHash.slice(1)
   return trimmed ? trimmed.split('#').filter(Boolean) : []
 }
 
-function hasNonLetter(value: string): boolean {
+function hasNonLetter (value: string): boolean {
   return /[^A-Za-z]/.test(value)
 }
 
-function hasHomoglyphs(domain: string): boolean {
+function hasHomoglyphs (domain: string): boolean {
   // Check if domain contains both Latin and Cyrillic characters
   const hasLatin = /[A-Za-z]/.test(domain)
   const hasCyrillic = /[а-яА-ЯёЁ]/.test(domain)
@@ -55,7 +55,7 @@ function hasHomoglyphs(domain: string): boolean {
   return false
 }
 
-function normalizeDomain(domain: string): string {
+function normalizeDomain (domain: string): string {
   // Normalize homoglyph combinations to their intended characters
   let normalized = domain.toLowerCase()
   normalized = normalized.replace(/rn/g, 'm')
@@ -68,7 +68,6 @@ function normalizeDomain(domain: string): string {
   normalized = normalized.replace(/[8B]+/g, '8') // Normalize 8 and B combinations
   return normalized
 }
-
 
 const FAMOUS_DOMAINS = new Set([
   'google',
@@ -110,11 +109,11 @@ const FAMOUS_DOMAINS = new Set([
   'telegram',
 ])
 
-function isFamousDomain(domain: string): boolean {
+function isFamousDomain (domain: string): boolean {
   return FAMOUS_DOMAINS.has(domain.toLowerCase())
 }
 
-export function parseInput(input: string): ParsedResult {
+export function parseInput (input: string): ParsedResult {
   try {
     let url: URL
 
@@ -156,12 +155,12 @@ export function parseInput(input: string): ParsedResult {
 
     const web: ParsedResult['Web'] = isWebProtocol
       ? {
-          Encrypted: url.protocol === 'https:' ? 'Yes' : 'No',
-          Subdomain: {
+          'Encrypted': url.protocol === 'https:' ? 'Yes' : 'No',
+          'Subdomain': {
             text: subdomain,
             warning: subdomainWarning,
           },
-          Hostname: {
+          'Hostname': {
             text: host,
             warning: hostWarning,
           },
@@ -192,9 +191,9 @@ export function parseInput(input: string): ParsedResult {
 
     const domainChecks: ParsedResult['DomainChecks'] = isWebProtocol
       ? {
-          'Contains only letters': !hasAnyNonLetter
-            ? { text: 'Yes', status: 'yes' }
-            : { text: 'No', status: 'no' },
+          'Contains only letters': hasAnyNonLetter
+            ? { text: 'No', status: 'no' }
+            : { text: 'Yes', status: 'yes' },
           'Is Famous Domain': (isFamous || isFamousWhenNormalized)
             ? { text: 'Yes', status: 'yes' }
             : { text: 'No', status: 'no' },
