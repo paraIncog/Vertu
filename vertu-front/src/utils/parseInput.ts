@@ -21,6 +21,50 @@ function hasNonLetter(value: string): boolean {
   return /[^A-Za-z]/.test(value)
 }
 
+const FAMOUS_DOMAINS = new Set([
+  'google',
+  'microsoft',
+  'amazon',
+  'apple',
+  'meta',
+  'facebook',
+  'twitter',
+  'x',
+  'linkedin',
+  'instagram',
+  'youtube',
+  'github',
+  'gitlab',
+  'stackoverflow',
+  'reddit',
+  'wikipedia',
+  'github',
+  'gitlab',
+  'slack',
+  'discord',
+  'netflix',
+  'spotify',
+  'adobe',
+  'ibm',
+  'oracle',
+  'salesforce',
+  'zoom',
+  'dropbox',
+  'notion',
+  'figma',
+  'stripe',
+  'paypal',
+  'twitch',
+  'pinterest',
+  'snapchat',
+  'whatsapp',
+  'telegram',
+])
+
+function isFamousDomain(domain: string): boolean {
+  return FAMOUS_DOMAINS.has(domain.toLowerCase())
+}
+
 export function parseInput(input: string): ParsedResult {
   try {
     let url: URL
@@ -82,6 +126,9 @@ export function parseInput(input: string): ParsedResult {
     const domainChecks: ParsedResult['DomainChecks'] = isWebProtocol
       ? {
           'Contains only letters': !hasAnyNonLetter
+            ? { text: 'Yes', status: 'yes' }
+            : { text: 'No', status: 'no' },
+          'Is Famous Domain': isFamousDomain(host)
             ? { text: 'Yes', status: 'yes' }
             : { text: 'No', status: 'no' },
         }
