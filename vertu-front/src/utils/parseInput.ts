@@ -21,6 +21,40 @@ function hasNonLetter(value: string): boolean {
   return /[^A-Za-z]/.test(value)
 }
 
+function hasHomoglyphs(domain: string): boolean {
+  // Check if domain contains both Latin and Cyrillic characters
+  const hasLatin = /[A-Za-z]/.test(domain)
+  const hasCyrillic = /[а-яА-ЯёЁ]/.test(domain)
+  const hasGreek = /[α-ωΑ-Ω]/.test(domain)
+
+  // If mixed scripts detected, it's likely a homoglyph attack
+  const mixedScripts = [hasLatin, hasCyrillic, hasGreek].filter(Boolean).length > 1
+
+  if (mixedScripts) {
+    return true
+  }
+
+  // Check for character combinations that look like other characters
+  const homoglyphCombos = [
+    /rn/, // looks like 'm'
+    /ii/, // looks like 'u'
+    /vv/, // looks like 'w'
+    /1l|l1/, // 1 and l look similar
+    /0O|O0/, // 0 and O look similar
+    /5S|S5/, // 5 and S look similar
+    /Cl|lC/, // Cl looks like C1
+    /8B|B8/, // 8 and B look similar
+  ]
+
+  for (const combo of homoglyphCombos) {
+    if (combo.test(domain.toLowerCase())) {
+      return true
+    }
+  }
+
+  return false
+}
+
 const FAMOUS_DOMAINS = new Set([
   'google',
   'microsoft',
@@ -123,6 +157,22 @@ export function parseInput(input: string): ParsedResult {
         }
       : undefined
 
+    const domainHasHomoglyphs = hasHomoglyphs(host)
+    const isFamous = isFamousDomain(host)
+
+    // Homoglyph logic:
+    // - If has homoglyphs and is famous: show red X (status: 'no')
+    // - If has homoglyphs but NOT famous: show yellow warning icon (warning: true)
+    // - If no homoglyphs: show green checkmark (status: 'yes')
+    let homoglyphCheck: DetailValue
+    if (!domainHasHomoglyphs) {
+      homoglyphCheck = { text: 'Yes', status: 'yes' }
+    } else if (isFamous) {
+      homoglyphCheck = { text: 'No', status: 'no' }
+    } else {
+      homoglyphCheck = { text: 'No', warning: true }
+    }
+
     const domainChecks: ParsedResult['DomainChecks'] = isWebProtocol
       ? {
           'Contains only letters': !hasAnyNonLetter
@@ -131,6 +181,7 @@ export function parseInput(input: string): ParsedResult {
           'Is Famous Domain': isFamousDomain(host)
             ? { text: 'Yes', status: 'yes' }
             : { text: 'No', status: 'no' },
+          'Has no homoglyphs': homoglyphCheck,
         }
       : undefined
 
