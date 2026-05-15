@@ -1,4 +1,4 @@
-export type DetailValue = string | undefined | { text: string; warning?: boolean; status?: 'yes' | 'no' }
+export type DetailValue = string | undefined | { text: string; warning?: boolean; redWarning?: boolean; status?: 'yes' | 'no' }
 
 export type ParsedResult = {
   General: Record<string, string>
@@ -54,6 +54,21 @@ function hasHomoglyphs(domain: string): boolean {
 
   return false
 }
+
+function normalizeDomain(domain: string): string {
+  // Normalize homoglyph combinations to their intended characters
+  let normalized = domain.toLowerCase()
+  normalized = normalized.replace(/rn/g, 'm')
+  normalized = normalized.replace(/ii/g, 'u')
+  normalized = normalized.replace(/vv/g, 'w')
+  normalized = normalized.replace(/[1l]+/g, '1') // Normalize 1 and l combinations
+  normalized = normalized.replace(/[0O]+/g, '0') // Normalize 0 and O combinations
+  normalized = normalized.replace(/[5S]+/g, '5') // Normalize 5 and S combinations
+  normalized = normalized.replace(/[Cc]l|[Ll][Cc]/g, 'c') // Normalize Cl/lC combinations
+  normalized = normalized.replace(/[8B]+/g, '8') // Normalize 8 and B combinations
+  return normalized
+}
+
 
 const FAMOUS_DOMAINS = new Set([
   'google',
@@ -159,16 +174,18 @@ export function parseInput(input: string): ParsedResult {
 
     const domainHasHomoglyphs = hasHomoglyphs(host)
     const isFamous = isFamousDomain(host)
+    const normalizedHost = normalizeDomain(host)
+    const isFamousWhenNormalized = isFamousDomain(normalizedHost)
 
     // Homoglyph logic:
-    // - If has homoglyphs and is famous: show red X (status: 'no')
+    // - If has homoglyphs and is famous (or famous when normalized): show red exclamation (redWarning: true)
     // - If has homoglyphs but NOT famous: show yellow warning icon (warning: true)
     // - If no homoglyphs: show green checkmark (status: 'yes')
     let homoglyphCheck: DetailValue
     if (!domainHasHomoglyphs) {
       homoglyphCheck = { text: 'Yes', status: 'yes' }
-    } else if (isFamous) {
-      homoglyphCheck = { text: 'No', status: 'no' }
+    } else if (isFamous || isFamousWhenNormalized) {
+      homoglyphCheck = { text: 'No', redWarning: true }
     } else {
       homoglyphCheck = { text: 'No', warning: true }
     }
@@ -178,7 +195,7 @@ export function parseInput(input: string): ParsedResult {
           'Contains only letters': !hasAnyNonLetter
             ? { text: 'Yes', status: 'yes' }
             : { text: 'No', status: 'no' },
-          'Is Famous Domain': isFamousDomain(host)
+          'Is Famous Domain': (isFamous || isFamousWhenNormalized)
             ? { text: 'Yes', status: 'yes' }
             : { text: 'No', status: 'no' },
           'Has no homoglyphs': homoglyphCheck,

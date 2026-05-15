@@ -12,7 +12,8 @@
         <span class="result-value">
           <template v-if="isValueObject(value)">
             <span>{{ value.text || '—' }}</span>
-            <span v-if="value.warning" class="warning-icon">!</span>
+            <span v-if="value.redWarning" class="warning-icon warning-red">!</span>
+            <span v-else-if="value.warning" class="warning-icon">!</span>
             <span v-else-if="value.status === 'yes'" class="status-icon status-yes">✓</span>
             <span v-else-if="value.status === 'no'" class="status-icon status-no">✕</span>
           </template>
@@ -26,7 +27,7 @@
 </template>
 
 <script lang="ts" setup>
-  type DetailValue = string | undefined | { text: string; warning?: boolean; status?: 'yes' | 'no' }
+  type DetailValue = string | undefined | { text: string; warning?: boolean; redWarning?: boolean; status?: 'yes' | 'no' }
 
   defineProps<{
     title: string
@@ -34,7 +35,7 @@
     data: Record<string, DetailValue>
   }>()
 
-  function isValueObject(value: DetailValue): value is { text: string; warning?: boolean; status?: 'yes' | 'no' } {
+  function isValueObject(value: DetailValue): value is { text: string; warning?: boolean; redWarning?: boolean; status?: 'yes' | 'no' } {
     return typeof value === 'object' && value !== null && 'text' in value
   }
 </script>
@@ -77,6 +78,11 @@
   font-weight: 700;
   font-size: 0.9rem;
   line-height: 1;
+}
+
+.warning-icon.warning-red {
+  background-color: #e53935;
+  color: #fff;
 }
 
 .status-icon {
